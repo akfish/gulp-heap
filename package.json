@@ -1,0 +1,18 @@
+{
+  "name": "gulp-heap",
+  "version": "1.0.0",
+  "description": "Modular gulp tasks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AKFish <akfish@gmail.com> (http://catx.me)",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-coffee": "^2.3.1",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-util": "^3.0.4",
+    "underscore": "^1.8.3"
+  }
+}
