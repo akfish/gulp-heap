@@ -1,6 +1,7 @@
 var _ = require('underscore'),
   gulp = require('gulp'),
-  gutil = require('gulp-util');
+  gutil = require('gulp-util'),
+  rename = require('gulp-rename');
 
 function runner(src, dst, action) {
   var context = {
@@ -19,7 +20,6 @@ function runner(src, dst, action) {
       if (this.actions.length === 0) throw new ReferenceError("No actions to be wrapped");
       this.wrappers.push({wrapper: wrapper, targetAction: this.actions.length - 1});
       this._last = wrapper;
-      console.log(wrapper);
       return this;
     },
     wrappers: [],
@@ -33,6 +33,16 @@ function runner(src, dst, action) {
       if (!this._last) throw new ReferenceError("No actions to be toggled");
       this._last.toggled = !toggle;
       return this;
+    },
+    dest: function(dst) {
+      // TODO:
+      return this;
+    },
+    rename: function(opts) {
+      r = makeTask(function(stream, o) {
+        return rename(o);
+      })(opts);
+      return this.then(r);
     }
   };
 
@@ -62,6 +72,8 @@ function runner(src, dst, action) {
         } else {
           stream.pipe(action.call(this, stream, action.opts));
         }
+      } else {
+        console.log(action);
       }
       if (wrapper && wrapper.toggled) stream.pipe(wrapper.end.call(this, stream, wrapper.endOpts));
     }, this);
@@ -75,13 +87,14 @@ function runner(src, dst, action) {
 
 function task(args, raw, defaultOpts) {
   if (args.length <= 1) {
-    var opts = {};
+    var opts;
     if (args.length === 1) opts = args[0];
-    raw.opts = _.defaults({}, defaultOpts, opts);
+    raw.opts = _.isFunction(opts) ? opts : _.defaults({}, defaultOpts, opts);
     raw.toggled = true;
     return raw;
   }
   raw.opts = _.defaults({}, defaultOpts, args[2]);
+  raw.toggled = true;
   return runner(args[0], args[1], raw);
 }
 
@@ -96,16 +109,20 @@ function wrapper(beginWrapper, EndWrapper, beginOpts, endOpts) {
   };
 }
 
-module.exports.task = function(raw, defaultOpts) {
+function makeTask(raw, defaultOpts) {
   return function(src, dst, opts) {
     return task(arguments, raw, defaultOpts);
   };
-};
+}
 
-module.exports.wrapper = function(beginWrapper, EndWrapper, defaultBeginOpts, defaultEndOpts) {
+function makeWrapper(beginWrapper, EndWrapper, defaultBeginOpts, defaultEndOpts) {
   return function(opts) {
-    var oBegin = _.defaults({}, defaultBeginOpts, opts),
-      oEnd = _.defaults({}, defaultEndOpts, opts);
+    var oBegin = _.isFunction(defaultBeginOpts) ? defaultBeginOpts : _.defaults({}, defaultBeginOpts, opts),
+      oEnd = _.isFunction(defaultEndOpts) ? defaultEndOpts : _.defaults({}, defaultEndOpts, opts);
     return wrapper(beginWrapper, EndWrapper, oBegin, oEnd);
   };
-};
+}
+
+module.exports.task = makeTask;
+
+module.exports.wrapper = makeWrapper;
