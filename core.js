@@ -3,47 +3,108 @@ var _ = require('underscore'),
   gutil = require('gulp-util'),
   rename = require('gulp-rename');
 
+var RUNNER_COUNTER = 0;
 function runner(src, dst, action) {
   var context = {
+    id: RUNNER_COUNTER,
     hasContext: true,
     src: src,
     dst: dst,
-    _last: null,
+    _handled: false,
+    _nexts: [],
+    _selection: null,
     toggled: true,
+    // wrappers: [],
+    _wrapperMap: {
+      begin: {},
+      end: {}
+    },
+    actions: [],
+    _getTarget: function() {
+      if (this._nexts.length === 0) return this;
+      return this._nexts[this._nexts.length - 1];
+    },
+    _getSelection: function() {
+      if (!this._selection) {
+        return {
+          from: this.actions.length - 1,
+          to: this.actions.length - 1
+        };
+      }
+      return this._selection;
+    },
+    _clearSelection: function() {
+      this._selection = null;
+    },
     then: function(task) {
-      this.actions.push(task);
-      this._last = task;
+      var target = this._getTarget();
+      target.actions.push(task);
+      target._last = task;
+      return this;
+    },
+    wrap: function(count) {
+      var from = this.actions.length - count;
+      if (from < 0 || from >= this.actions.length) throw new RangeError("Wrap count out of range");
+      this._selection = {
+        from: from,
+        to: this.actions.length - 1
+      };
+      return this;
+    },
+    wrapAll: function() {
+      this._selection = {
+        from: 0,
+        to: this.actions.length - 1
+      };
       return this;
     },
     with: function(wrapper) {
+      var target = this._getTarget();
       if (!wrapper.isWrapper) throw new TypeError(wrapper + " is not a wrapper");
-      if (this.actions.length === 0) throw new ReferenceError("No actions to be wrapped");
-      this.wrappers.push({wrapper: wrapper, targetAction: this.actions.length - 1});
-      this._last = wrapper;
+      if (target.actions.length === 0) throw new ReferenceError("No actions to be wrapped");
+      var sel = target._getSelection();
+      // target.wrappers.push({wrapper: wrapper, targetAction: target.actions.length - 1, sel: sel});
+      target._last = wrapper;
+      var map = target._wrapperMap;
+      if (!map.begin[sel.from]) map.begin[sel.from] = [];
+      map.begin[sel.from].unshift(wrapper); // LIFO
+      if (!map.end[sel.to]) map.end[sel.to] = [];
+      map.end[sel.to].push(wrapper);
+      target._clearSelection();
       return this;
     },
-    wrappers: [],
-    actions: [],
     if: function(toggle) {
-      if (!this._last) throw new ReferenceError("No actions to be toggled");
-      this._last.toggled = toggle;
+      var target = this._getTarget();
+      if (!target._last) throw new ReferenceError("No actions to be toggled");
+      target._last.toggled = toggle;
       return this;
     },
     ifNot: function(toggle) {
-      if (!this._last) throw new ReferenceError("No actions to be toggled");
-      this._last.toggled = !toggle;
+      var target = this._getTarget();
+      if (!target._last) throw new ReferenceError("No actions to be toggled");
+      target._last.toggled = !toggle;
       return this;
     },
     dest: function(dst) {
-      // TODO:
+      var target = this._getTarget();
+      var d = makeTask(function(stream, o) {
+        return gulp.dest(o);
+      })(dst);
+      target.then(d);
       return this;
     },
     rename: function(opts) {
-      r = makeTask(function(stream, o) {
+      var target = this._getTarget();
+      var r = makeTask(function(stream, o) {
         return rename(o);
       })(opts);
-      return this.then(r);
-    }
+      target.then(r);
+      return this;
+    },
+    next: function(task) {
+      this._nexts.push(task);
+      return this;
+    },
   };
 
   if (action) {
@@ -53,49 +114,91 @@ function runner(src, dst, action) {
   }
 
   var fn = function(cb, stream, noWrite) {
+    // console.log("Context: #" + context.id);
     if (!stream) {
+      console.log("Src: " + context.src);
       stream = gulp.src(context.src).on('error', gutil.log);//[context.src];
     }
-    var tryGetWrapper = function(i) {
-      if (context.wrappers.length === 0) return;
-      if (context.wrappers[0].targetAction === i) {
-        return context.wrappers.shift().wrapper;
-      }
-    };
+    // var tryGetWrapper = function(i) {
+    //   if (context.wrappers.length === 0) return;
+    //   if (context.wrappers[0].targetAction === i) {
+    //     return context.wrappers.shift().wrapper;
+    //   }
+    // };
+
+    function runWrapper(m, i, cb) {
+      if (!m[i]) return;
+      m[i].forEach(function (wrapper) {
+        if (!wrapper.toggled) return;
+        cb(wrapper);
+      });
+    }
 
     context.actions.forEach(function (action, i) {
-      var wrapper = tryGetWrapper(i);
-      if (wrapper && wrapper.toggled) stream.pipe(wrapper.begin.call(this, stream, wrapper.beginOpts));
+      // var wrapper = tryGetWrapper(i);
+      // if (wrapper && wrapper.toggled) {
+      //   stream = stream.pipe(wrapper.begin.call(this, stream, wrapper.beginOpts));
+      // }
+      runWrapper(context._wrapperMap.begin, i, function(wrapper) {
+        stream = stream.pipe(wrapper.begin.call(context, stream, wrapper.beginOpts));
+      });
       if (action.toggled) {
         if (action.hasContext) {
-          action(cb, stream, true);
+          stream = action(cb, stream, true);
         } else {
-          stream.pipe(action.call(this, stream, action.opts));
+          stream = stream.pipe(action.call(this, stream, action.opts));
         }
-      } else {
-        console.log(action);
       }
-      if (wrapper && wrapper.toggled) stream.pipe(wrapper.end.call(this, stream, wrapper.endOpts));
+      runWrapper(context._wrapperMap.end, i, function(wrapper) {
+        stream = stream.pipe(wrapper.end.call(context, stream, wrapper.endOpts));
+      });
+      // if (wrapper && wrapper.toggled) {
+      //   stream = stream.pipe(wrapper.end.call(this, stream, wrapper.endOpts));
+      // }
     }, this);
-    if (!noWrite) stream.pipe(gulp.dest(context.dst));
+    if (!noWrite && _.isString(context.dst)) {
+      console.log("Dst: " + context.dst);
+      stream = stream.pipe(gulp.dest(context.dst));
+    }
+
+    context._handled = true;
+
+    context._nexts.forEach(function (next) {
+      next(cb, stream);
+    });
     // stream.push(context.dst);
     return stream;
   };
   _.extend(fn, context);
+  RUNNER_COUNTER++;
   return fn;
 }
 
+function defaults(defaultOpts, opts) {
+  if (_.isString(opts) || _.isFunction(opts)) return opts;
+  return _.defaults({}, defaultOpts, opts);
+}
+
 function task(args, raw, defaultOpts) {
-  if (args.length <= 1) {
-    var opts;
-    if (args.length === 1) opts = args[0];
-    raw.opts = _.isFunction(opts) ? opts : _.defaults({}, defaultOpts, opts);
-    raw.toggled = true;
-    return raw;
+  var src, dst, opts;
+  switch (args.length) {
+    case 1:
+      opts = args[0];
+      break;
+    case 2:
+      src = args[0];
+      dst = args[1];
+      break;
+    case 3:
+      src = args[0];
+      dst = args[1];
+      opts = args[2];
+      break;
+    default:
   }
-  raw.opts = _.defaults({}, defaultOpts, args[2]);
+  raw.opts = defaults(defaultOpts, opts);
   raw.toggled = true;
-  return runner(args[0], args[1], raw);
+  return runner(src, dst, raw);
 }
 
 function wrapper(beginWrapper, EndWrapper, beginOpts, endOpts) {
@@ -117,8 +220,8 @@ function makeTask(raw, defaultOpts) {
 
 function makeWrapper(beginWrapper, EndWrapper, defaultBeginOpts, defaultEndOpts) {
   return function(opts) {
-    var oBegin = _.isFunction(defaultBeginOpts) ? defaultBeginOpts : _.defaults({}, defaultBeginOpts, opts),
-      oEnd = _.isFunction(defaultEndOpts) ? defaultEndOpts : _.defaults({}, defaultEndOpts, opts);
+    var oBegin = defaults(defaultBeginOpts, opts),
+      oEnd = defaults(defaultEndOpts, opts);
     return wrapper(beginWrapper, EndWrapper, oBegin, oEnd);
   };
 }
