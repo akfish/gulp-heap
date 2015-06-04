@@ -4,8 +4,10 @@ var fs = require('fs'),
 
 cli.init();
 
-fs.readdirSync(__dirname).forEach(function(file) {
-  var p = path.resolve(__dirname +  '/', file +  '/index.js');
+var providedDir = path.join(__dirname, '/provided');
+
+fs.readdirSync(providedDir).forEach(function(file) {
+  var p = path.resolve(providedDir +  '/', file +  '/index.js');
   if (fs.existsSync(p)) {
     module.exports[file] = require(p);
   }
