@@ -1,7 +1,8 @@
 var _ = require('underscore'),
   gulp = require('gulp'),
   gutil = require('gulp-util'),
-  rename = require('gulp-rename');
+  rename = require('gulp-rename'),
+  plumber = require('gulp-plumber');
 
 var RUNNER_COUNTER = 0;
 function runner(src, dst, action) {
@@ -117,7 +118,7 @@ function runner(src, dst, action) {
     // console.log("Context: #" + context.id);
     if (!stream) {
       console.log("Src: " + context.src);
-      stream = gulp.src(context.src).on('error', gutil.log);//[context.src];
+      stream = gulp.src(context.src).on('error', gutil.log).pipe(plumber());//[context.src];
     }
     // var tryGetWrapper = function(i) {
     //   if (context.wrappers.length === 0) return;
