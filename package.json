@@ -1,7 +1,7 @@
 {
   "name": "gulp-heap",
-  "version": "1.0.0",
-  "description": "Modular gulp tasks",
+  "version": "1.0.1",
+  "description": "Semantic gulp API (experimental and still under developing, not suitalbe for production use)",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
