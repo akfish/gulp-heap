@@ -1,6 +1,9 @@
-var core = require('./core');
+var core = require('./core'),
+  _ = require('underscore');
 
 var TASK_CACHE = {};
+
+module.paths = _.uniq(module.paths.concat(module.parent.parent.paths));
 
 module.exports = function(path, defaultOpts) {
   if (TASK_CACHE[path]) return TASK_CACHE[path];
