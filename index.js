@@ -12,5 +12,6 @@ fs.readdirSync(__dirname).forEach(function(file) {
 });
 
 module.exports.cli = cli;
+module.exports.require = require('./require');
 
 if (cli.run().debug) console.log(cli.opts);

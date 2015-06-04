@@ -219,9 +219,9 @@ function makeTask(raw, defaultOpts) {
 }
 
 function makeWrapper(beginWrapper, EndWrapper, defaultBeginOpts, defaultEndOpts) {
-  return function(opts) {
-    var oBegin = defaults(defaultBeginOpts, opts),
-      oEnd = defaults(defaultEndOpts, opts);
+  return function(beginOpts, endOpts) {
+    var oBegin = defaults(defaultBeginOpts, beginOpts),
+      oEnd = defaults(defaultEndOpts, endOpts);
     return wrapper(beginWrapper, EndWrapper, oBegin, oEnd);
   };
 }
