@@ -1,6 +1,6 @@
 {
   "name": "gulp-heap",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Semantic gulp API (experimental and still under developing, not suitalbe for production use)",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,11 @@
   },
   "author": "AKFish <akfish@gmail.com> (http://catx.me)",
   "license": "MIT",
-  "devDependencies": {
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akfish/gulp-heap.git"
+  },
+  "dependencies": {
     "gulp": "^3.8.11",
     "gulp-plumber": "^1.0.1",
     "gulp-rename": "^1.2.2",
