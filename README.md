@@ -196,5 +196,18 @@ otherTask(src, dst)
   .with(sourcemaps())
 ```
 
+### Convertor
+
+Some gulp plugin modules like `gulp-csslint` exports in multiple fields and cannot be required directly. They can be converted by:
+
+```coffee
+heap = require 'gulp-heap'
+# Require directly
+csslint = require('gulp-csslint')
+# Then convert
+lint      = heap.convert(csslint).toTask()
+reporter  = heap.convert(csslint.reporter).toTask()
+```
+
 Current limitations:
 * The plugin should only take one arguments
