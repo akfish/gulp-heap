@@ -15,6 +15,8 @@ function runner(src, dst, action) {
     _nexts: [],
     _selection: null,
     toggled: true,
+    srcOpts: {},
+    dstOpts: {},
     // wrappers: [],
     _wrapperMap: {
       begin: {},
@@ -36,6 +38,30 @@ function runner(src, dst, action) {
     },
     _clearSelection: function() {
       this._selection = null;
+    },
+    source: function(src, opts) {
+      if (_.isString(src)) {
+        if (_.isString(context.src)) {
+          console.warn("Source '" + context.src + "' has already been set. Overrided with '" + src + "'.");
+        }
+        context.src = src;
+      } else {
+        opts = src;
+      }
+      context.srcOpts = _.defaults({}, opts);
+      return this;
+    },
+    dest: function(dst, opts) {
+      if (_.isString(dst)) {
+        if (_.isString(context.dst)) {
+          console.warn("Destination '" + context.src + "' has already been set. Overrided with '" + dst + "'");
+        }
+        context.dst = dst;
+      } else {
+        opts = dst;
+      }
+      context.dstOpts = _.defaults({}, opts);
+      return this;
     },
     then: function(task) {
       var target = this._getTarget();
@@ -86,10 +112,10 @@ function runner(src, dst, action) {
       target._last.toggled = !toggle;
       return this;
     },
-    dest: function(dst) {
+    write: function(dst, opts) {
       var target = this._getTarget();
       var d = makeTask(function(stream, o) {
-        return gulp.dest(o);
+        return gulp.dest(o, opts);
       })(dst);
       target.then(d);
       return this;
@@ -117,8 +143,8 @@ function runner(src, dst, action) {
   var fn = function(cb, stream, noWrite) {
     // console.log("Context: #" + context.id);
     if (!stream) {
-      console.log("Src: " + context.src);
-      stream = gulp.src(context.src).on('error', gutil.log).pipe(plumber());//[context.src];
+      console.log("Src: " + context.src + ", " + JSON.stringify(context.srcOpts));
+      stream = gulp.src(context.src, context.srcOpts).on('error', gutil.log).pipe(plumber());//[context.src];
     }
     // var tryGetWrapper = function(i) {
     //   if (context.wrappers.length === 0) return;
@@ -158,8 +184,8 @@ function runner(src, dst, action) {
       // }
     }, this);
     if (!noWrite && _.isString(context.dst)) {
-      console.log("Dst: " + context.dst);
-      stream = stream.pipe(gulp.dest(context.dst));
+      console.log("Dst: " + context.dst + ", " + JSON.stringify(context.dstOpts));
+      stream = stream.pipe(gulp.dest(context.dst, context.dstOpts));
     }
 
     context._handled = true;

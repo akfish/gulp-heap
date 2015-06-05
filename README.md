@@ -17,7 +17,7 @@ gulp.task 'coffee',
   coffee('./coffee/**/*.coffee', './lib/')
     .then(uglify())
     .wrapAll().with(sourcemaps()).if(cli.opts.debug)
-    .next(concat('all.js')).dest('./dist/')
+    .next(concat('all.js')).write('./dist/')
 ```
 
 The above gulp task does the following:
@@ -76,6 +76,15 @@ The first called `gulp-heap` through task would handle all of that with one line
 ```coffee
 task(src, dst, opts)
   .then(otherTask()) # Chained API
+```
+
+Sometimes options are needed for `gulp.src` or `gulp.dest` calls. The equivalent `gulp-heap` APIs are:
+
+```coffee
+task(opts).source(src, srcOpts).dest(dst, dstOpts)
+
+# Useful when running mocha tests for example:
+mocha(opts).source(testSrc, {read: false})
 ```
 
 ### Through Tasks
