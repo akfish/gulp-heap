@@ -15,5 +15,6 @@ fs.readdirSync(providedDir).forEach(function(file) {
 
 module.exports.cli = cli;
 module.exports.require = require('./require');
+module.exports.convert = require('./convert');
 
 if (cli.run().debug) console.log(cli.opts);
