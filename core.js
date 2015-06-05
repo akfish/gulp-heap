@@ -177,7 +177,7 @@ function runner(src, dst, action) {
 
 function defaults(defaultOpts, opts) {
   if (_.isString(opts) || _.isFunction(opts)) return opts;
-  return _.defaults({}, defaultOpts, opts);
+  return _.defaults({}, opts, defaultOpts);
 }
 
 function task(args, raw, defaultOpts) {
