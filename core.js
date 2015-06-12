@@ -142,7 +142,7 @@ function runner(src, dst, action) {
 
   var fn = function(cb, stream, noWrite) {
     // console.log("Context: #" + context.id);
-    if (!stream) {
+    if (!stream && context.src) {
       console.log("Src: " + context.src + ", " + JSON.stringify(context.srcOpts));
       stream = gulp.src(context.src, context.srcOpts).on('error', gutil.log).pipe(plumber());//[context.src];
     }
@@ -173,7 +173,12 @@ function runner(src, dst, action) {
         if (action.hasContext) {
           stream = action(cb, stream, true);
         } else {
-          stream = stream.pipe(action.call(this, stream, action.opts));
+          var s = action.call(this, stream, action.opts);
+          if (stream) {
+            stream = stream.pipe(s);
+          } else {
+            stream = s;
+          }
         }
       }
       runWrapper(context._wrapperMap.end, i, function(wrapper) {

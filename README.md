@@ -211,3 +211,25 @@ reporter  = heap.convert(csslint.reporter).toTask()
 
 Current limitations:
 * The plugin should only take one arguments
+
+
+## Recipes
+
+### Browserify
+
+Direct translation from [Gulp Recipes | Browserify + Transforms](https://github.com/gulpjs/gulp/blob/master/docs/recipes/browserify-transforms.md):
+
+```coffee
+source = heap.require('vinyl-source-stream')
+buffer = heap.require('vinyl-buffer')
+uglify = heap.require('gulp-uglify')
+browserify = heap.convert((opts) -> require('browserify')(opts).bundle()).toTask()
+
+gulp.task 'browser',
+  browserify(browserifyOpts)
+    .then(source('app.js'))
+    .then(buffer()).dest(dist)
+    .next(uglify())
+    .rename('app.min.js')
+    .write(dist)
+```
