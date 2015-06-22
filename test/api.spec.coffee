@@ -16,6 +16,12 @@ c = core.task makeTask('c')
 d = core.task makeTask('d')
 e = core.task makeTask('e')
 
+wBefore = makeTask('w:before')
+wAfter = makeTask('w:after')
+w = core.wrapper wBefore, wAfter
+w.before = wBefore
+w.after = wAfter
+
 describe 'API', ->
   src = 'a_source_src'
   srcOpts = { it: 'a' }
@@ -94,9 +100,144 @@ describe 'API', ->
     checkContent(s, expectedContent)
     checkFile(src, dstThen, expectedContent, {})
 
-  it ".with"
-  it ".wrap"
-  it ".wrapAll"
+  it ".with", ->
+    dstW = dst + ".with"
+    expectedContent = [
+      a.raw.payload(),
+      w.before.payload(),
+      b.raw.payload(),
+      w.after.payload()
+    ]
+
+    s = a(src, dstW).then(b()).with(w())()
+    expect(s).to.be.an.instanceOf(Stream)
+    checkSrc(s, src, {})
+    checkName(s, src)
+    checkDst(s, dstW, {})
+    checkContent(s, expectedContent)
+    checkFile(src, dstW, expectedContent, {})
+
+  describe ".wrap", ->
+    it "should work", ->
+      dstW = dst + ".wrap"
+      expectedContent = [
+        a.raw.payload(),
+        b.raw.payload(),
+        w.before.payload(),
+        c.raw.payload(),
+        d.raw.payload(),
+        w.after.payload()
+      ]
+      s = a(src, dstW)
+        .then(b())
+        .then(c())
+        .then(d())
+        .wrap(2).with(w())()
+
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstW, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstW, expectedContent, {})
+
+    it "should not allow out of range value", ->
+      makeWrongWrapping = ->
+        a(src, dst)
+          .then(b())
+          .then(c())
+          .then(d())
+          .wrap(10).with(w())
+
+      expect(makeWrongWrapping).to.throw(RangeError, "Wrap count out of range")
+
+    it "should not penetrate .next() call", ->
+      dstW = dst + ".next.wrap"
+      dstW_next = dst + ".next.wrap.1"
+      expectedContent = [
+        a.raw.payload(),
+        b.raw.payload(),
+        w.before.payload(),
+        c.raw.payload(),
+        d.raw.payload(),
+        w.after.payload()
+      ]
+
+      s = a(src, dstW)
+        .then(b())
+        .next(c())
+        .then(d())
+        .wrap(2).with(w())
+        .write(dstW_next)()
+
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstW, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstW_next, expectedContent)
+
+      tryPenetrateNext = ->
+        a(src, dst)
+          .then(b())
+          .next(c())
+          .then(d())
+          .wrap(3) # try to wrap b, c, d
+          .with(w())
+      expect(tryPenetrateNext).to.throw(RangeError, "Wrap count out of range")
+
+
+  describe ".wrapAll", ->
+    it "should work", ->
+      dstW = dst + ".wrapAll"
+      expectedContent = [
+        w.before.payload(),
+        a.raw.payload(),
+        b.raw.payload(),
+        c.raw.payload(),
+        d.raw.payload(),
+        w.after.payload()
+      ]
+      s = a(src, dstW)
+        .then(b())
+        .then(c())
+        .then(d())
+        .wrapAll().with(w())()
+
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstW, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstW, expectedContent, {})
+
+    it "should not penetrate .next() call", ->
+      dstW = dst + ".next.wrapAll"
+      dstW_next = dst + ".next.wrapAll.1"
+      expectedContent = [
+        a.raw.payload(),
+        b.raw.payload(),
+        w.before.payload(),
+        c.raw.payload(),
+        d.raw.payload(),
+        w.after.payload()
+      ]
+      s = a(src, dstW)
+        .then(b())
+        .next(c())
+        .then(d())
+        .wrapAll().with(w())
+        .write(dstW_next)()
+
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstW, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstW_next, expectedContent)
+
+  it ".if"
+  it ".ifNot"
   it ".next", ->
     dst1 = dst + '.next.1'
     dst2 = dst + '.next.2'
