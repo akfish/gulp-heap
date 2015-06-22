@@ -2,7 +2,9 @@ expect = require('chai').expect
 
 core = require('../lib/core')
 
-{Stream, makeTask} = require('./mock')
+{Stream, makeTask, FS} = require('./mock')
+
+FS.open('task')
 
 describe 'Task', ->
   task = null
@@ -30,6 +32,12 @@ describe 'Task', ->
       .that.equals('src_path')
     expect(s).to.have.a.property('content')
       .that.deep.equals(expectedContent)
+
+    file = FS.read('dst_path')
+
+    expect(file).not.to.be.null
+    expect(file.content).to.deep.equals(expectedContent)
+    expect(file.opts).to.deep.equals({})
 
   it "should initialize partially", ->
     upstreamOpts = foo: 'upstream'

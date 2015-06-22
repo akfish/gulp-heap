@@ -1,7 +1,37 @@
 console.log("Initialize mock for testing");
+_ = require 'underscore'
 
 STREAM_COUNTER = 0
+class MockFS
+  constructor: ->
+    @_storage = {}
+
+  open: (ns) ->
+    if not @_storage[ns]?
+      @_storage[ns] = {}
+    @_currentNs = ns
+
+  _getCurrentNs: ->
+    if not @_currentNs? then throw new Error("MockFS.ns not set")
+    return @_storage[@_currentNs]
+
+  write: (dst, name, content, opts) ->
+    ns = @_getCurrentNs()
+
+    ns[dst] =
+      name: name
+      content: content
+      opts: opts
+
+  read: (dst) ->
+    ns = @_getCurrentNs()
+
+    ns[dst]
+
+FS = new MockFS()
+
 class MockStream
+  @FS: FS
   constructor: (@src, @srcOpts) ->
     @id = STREAM_COUNTER++
     @name = @src
@@ -16,6 +46,7 @@ class MockStream
     @content.push(line)
 
   dest: (@dst, @dstOpts) ->
+    @constructor.FS.write(@dst, @name, @content.map((item) -> _.clone(item)), @dstOpts)
 
   takeOver: (prevStream) ->
     @src = prevStream.src
@@ -75,3 +106,5 @@ module.exports.makeTask = (name) ->
     payload
 
   raw
+
+module.exports.FS = FS
