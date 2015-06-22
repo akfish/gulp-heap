@@ -236,8 +236,88 @@ describe 'API', ->
       checkContent(s, expectedContent)
       checkFile(src, dstW_next, expectedContent)
 
-  it ".if"
-  it ".ifNot"
+  describe ".if", ->
+    it "should work with task", ->
+      aOpts = { foo: 'a' }
+      bOpts = { bar: 'b' }
+      cOpts = "string"
+      dOpts = ->
+      expectedContent = [
+        a.raw.payload(aOpts),
+        b.raw.payload(bOpts),
+        # c.raw.payload(cOpts),
+        d.raw.payload(dOpts),
+        e.raw.payload(),
+      ]
+      dstIf =  dst + ".if"
+      s = a(src, dstIf, aOpts)
+        .then(b(bOpts)).if(true)
+        .then(c(cOpts)).if(false)
+        .then(d(dOpts))
+        .then(e())()
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstIf, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstIf, expectedContent, {})
+
+    it "should work with wrapper", ->
+      dstIf = dst + ".with.if"
+      expectedContent = [
+        a.raw.payload(),
+        b.raw.payload(),
+      ]
+
+      s = a(src, dstIf).then(b()).with(w()).if(false)()
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstIf, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstIf, expectedContent, {})
+
+  describe ".ifNot", ->
+    it "should work with task", ->
+      aOpts = { foo: 'a' }
+      bOpts = { bar: 'b' }
+      cOpts = "string"
+      dOpts = ->
+      expectedContent = [
+        a.raw.payload(aOpts),
+        b.raw.payload(bOpts),
+        # c.raw.payload(cOpts),
+        d.raw.payload(dOpts),
+        e.raw.payload(),
+      ]
+      dstIf =  dst + ".ifNot"
+      s = a(src, dstIf, aOpts)
+        .then(b(bOpts)).ifNot(false)
+        .then(c(cOpts)).ifNot(true)
+        .then(d(dOpts))
+        .then(e())()
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstIf, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstIf, expectedContent, {})
+
+    it "should work with wrapper", ->
+      dstIf = dst + ".with.ifNot"
+      expectedContent = [
+        a.raw.payload(),
+        b.raw.payload(),
+      ]
+
+      s = a(src, dstIf).then(b()).with(w()).ifNot(true)()
+      expect(s).to.be.an.instanceOf(Stream)
+      checkSrc(s, src, {})
+      checkName(s, src)
+      checkDst(s, dstIf, {})
+      checkContent(s, expectedContent)
+      checkFile(src, dstIf, expectedContent, {})
+
   it ".next", ->
     dst1 = dst + '.next.1'
     dst2 = dst + '.next.2'
