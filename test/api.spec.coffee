@@ -1,5 +1,6 @@
 expect = require('chai').expect
 
+util = require('./util')
 core = require('../lib/core')
 
 {Stream, makeTask, FS} = require('./mock')
@@ -28,52 +29,23 @@ describe 'API', ->
   dst = 'a_source_dst'
   dstOpts = { it: 'a' }
 
-  checkSrc = (s, src, opts) ->
-    expect(s).to.have.a.property('src')
-      .that.equals(src)
-    expect(s).to.have.a.property('srcOpts')
-      .that.to.deep.equals(opts)
-
-  checkDst = (s, dst, opts) ->
-    expect(s).to.have.a.property('dst')
-      .that.equals(dst)
-    expect(s).to.have.a.property('dstOpts')
-      .that.to.deep.equals(opts)
-
-  checkName = (s, name) ->
-    expect(s).to.have.a.property('name')
-      .that.equals(name)
-
-  checkContent = (s, content) ->
-    expect(s).to.have.a.property('content')
-      .that.deep.equals(content)
-
-  checkFile = (name, dst, content, opts) ->
-    file = FS.read(dst)
-
-    expect(file).not.to.be.null
-    expect(file.name).to.deep.equals(name)
-    expect(file.content).to.deep.equals(content)
-    expect(file.opts).to.deep.equals(opts)
-
-
   it ".source", ->
     s = a().source(src, srcOpts)()
     expect(s).to.be.an.instanceOf(Stream)
-    checkSrc(s, src, srcOpts)
-    checkName(s, src)
-    checkDst(s, undefined, undefined)
-    checkContent(s, [a.raw.payload()])
+    util.checkSrc(s, src, srcOpts)
+    util.checkName(s, src)
+    util.checkDst(s, undefined, undefined)
+    util.checkContent(s, [a.raw.payload()])
 
   it ".dest", ->
     expectedContent = [a.raw.payload()]
     s = a().source(src, srcOpts).dest(dst, dstOpts)()
     expect(s).to.be.an.instanceOf(Stream)
-    checkSrc(s, src, srcOpts)
-    checkName(s, src)
-    checkDst(s, dst, dstOpts)
-    checkContent(s, expectedContent)
-    checkFile(src, dst, expectedContent, dstOpts)
+    util.checkSrc(s, src, srcOpts)
+    util.checkName(s, src)
+    util.checkDst(s, dst, dstOpts)
+    util.checkContent(s, expectedContent)
+    util.checkFile(src, dst, expectedContent, dstOpts)
 
   it ".then", ->
     aOpts = { foo: 'a' }
@@ -94,11 +66,11 @@ describe 'API', ->
       .then(d(dOpts))
       .then(e())()
     expect(s).to.be.an.instanceOf(Stream)
-    checkSrc(s, src, {})
-    checkName(s, src)
-    checkDst(s, dstThen, {})
-    checkContent(s, expectedContent)
-    checkFile(src, dstThen, expectedContent, {})
+    util.checkSrc(s, src, {})
+    util.checkName(s, src)
+    util.checkDst(s, dstThen, {})
+    util.checkContent(s, expectedContent)
+    util.checkFile(src, dstThen, expectedContent, {})
 
   it ".with", ->
     dstW = dst + ".with"
@@ -111,11 +83,11 @@ describe 'API', ->
 
     s = a(src, dstW).then(b()).with(w())()
     expect(s).to.be.an.instanceOf(Stream)
-    checkSrc(s, src, {})
-    checkName(s, src)
-    checkDst(s, dstW, {})
-    checkContent(s, expectedContent)
-    checkFile(src, dstW, expectedContent, {})
+    util.checkSrc(s, src, {})
+    util.checkName(s, src)
+    util.checkDst(s, dstW, {})
+    util.checkContent(s, expectedContent)
+    util.checkFile(src, dstW, expectedContent, {})
 
   describe ".wrap", ->
     it "should work", ->
@@ -135,11 +107,11 @@ describe 'API', ->
         .wrap(2).with(w())()
 
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstW, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstW, expectedContent, {})
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstW, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstW, expectedContent, {})
 
     it "should not allow out of range value", ->
       makeWrongWrapping = ->
@@ -171,11 +143,11 @@ describe 'API', ->
         .write(dstW_next)()
 
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstW, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstW_next, expectedContent)
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstW, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstW_next, expectedContent)
 
       tryPenetrateNext = ->
         a(src, dst)
@@ -205,11 +177,11 @@ describe 'API', ->
         .wrapAll().with(w())()
 
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstW, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstW, expectedContent, {})
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstW, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstW, expectedContent, {})
 
     it "should not penetrate .next() call", ->
       dstW = dst + ".next.wrapAll"
@@ -230,11 +202,11 @@ describe 'API', ->
         .write(dstW_next)()
 
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstW, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstW_next, expectedContent)
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstW, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstW_next, expectedContent)
 
   describe ".if", ->
     it "should work with task", ->
@@ -256,11 +228,11 @@ describe 'API', ->
         .then(d(dOpts))
         .then(e())()
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstIf, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstIf, expectedContent, {})
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstIf, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstIf, expectedContent, {})
 
     it "should work with wrapper", ->
       dstIf = dst + ".with.if"
@@ -271,11 +243,11 @@ describe 'API', ->
 
       s = a(src, dstIf).then(b()).with(w()).if(false)()
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstIf, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstIf, expectedContent, {})
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstIf, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstIf, expectedContent, {})
 
   describe ".ifNot", ->
     it "should work with task", ->
@@ -297,11 +269,11 @@ describe 'API', ->
         .then(d(dOpts))
         .then(e())()
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstIf, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstIf, expectedContent, {})
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstIf, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstIf, expectedContent, {})
 
     it "should work with wrapper", ->
       dstIf = dst + ".with.ifNot"
@@ -312,11 +284,11 @@ describe 'API', ->
 
       s = a(src, dstIf).then(b()).with(w()).ifNot(true)()
       expect(s).to.be.an.instanceOf(Stream)
-      checkSrc(s, src, {})
-      checkName(s, src)
-      checkDst(s, dstIf, {})
-      checkContent(s, expectedContent)
-      checkFile(src, dstIf, expectedContent, {})
+      util.checkSrc(s, src, {})
+      util.checkName(s, src)
+      util.checkDst(s, dstIf, {})
+      util.checkContent(s, expectedContent)
+      util.checkFile(src, dstIf, expectedContent, {})
 
   it ".next", ->
     dst1 = dst + '.next.1'
@@ -325,7 +297,7 @@ describe 'API', ->
 
     s = a(src, dst1)
       .next(b())()
-    checkFile(src, dst1, expectedContent1, {})
+    util.checkFile(src, dst1, expectedContent1, {})
   it ".write", ->
     dst1 = dst + '.write.1'
     dst2 = dst + '.write.2'
@@ -334,8 +306,8 @@ describe 'API', ->
 
     s = a(src, dst1)
       .next(b()).write(dst2)()
-    checkFile(src, dst1, expectedContent1, {})
-    checkFile(src, dst2, expectedContent2, undefined)
+    util.checkFile(src, dst1, expectedContent1, {})
+    util.checkFile(src, dst2, expectedContent2, undefined)
 
   it ".rename", ->
     dstRename = dst + '.rename'
@@ -344,4 +316,4 @@ describe 'API', ->
 
     s = a(src, dstRename).rename(newName)()
 
-    checkFile(newName, dstRename, expectedContent, {})
+    util.checkFile(newName, dstRename, expectedContent, {})
