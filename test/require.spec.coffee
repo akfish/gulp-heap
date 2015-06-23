@@ -1,11 +1,13 @@
 expect = require('chai').expect
 
 _require = require('../lib/require')
+Task = require('../lib/task')
 
 util = {check} = require('./util')
 path = require('path')
 
 {Stream, makeTask, FS} = require('./mock')
+
 
 FS.open('require')
 
@@ -23,8 +25,8 @@ describe "Require", ->
     expect(taskMaker).to.be.a('function')
     task = taskMaker(src, dst)
     expect(task).to.be.a('function')
-      .that.has.property('hasContext')
-      .that.is.true
+      .that.has.property('task')
+      .that.is.instanceOf(Task)
 
     s = task()
 

@@ -2,6 +2,7 @@ expect = require('chai').expect
 
 util = {check} = require('./util')
 convert = require('../lib/convert')
+Task = require('../lib/task')
 
 {Stream, makeTask, FS} = require('./mock')
 
@@ -22,8 +23,8 @@ describe "Converter", ->
     expect(taskMaker).to.be.a('function')
     task = taskMaker(src, dst)
     expect(task).to.be.a('function')
-      .that.has.property('hasContext')
-      .that.is.true
+      .that.has.property('task')
+      .that.is.instanceOf(Task)
 
     s = task()
 

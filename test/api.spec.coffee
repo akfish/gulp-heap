@@ -7,15 +7,17 @@ core = require('../lib/core')
 
 FS.open('api')
 
-raw = [
+aRaw = makeTask('a')
+bRaw = makeTask('b')
+cRaw = makeTask('c')
+dRaw = makeTask('d')
+eRaw = makeTask('e')
 
-]
-
-a = core.task makeTask('a')
-b = core.task makeTask('b')
-c = core.task makeTask('c')
-d = core.task makeTask('d')
-e = core.task makeTask('e')
+a = core.task aRaw
+b = core.task bRaw
+c = core.task cRaw
+d = core.task dRaw
+e = core.task eRaw
 
 wBefore = makeTask('w:before')
 wAfter = makeTask('w:after')
@@ -34,10 +36,10 @@ describe 'API', ->
     check(s).for.src(src, srcOpts)
     check(s).for.name(src)
     check(s).for.dst(undefined, undefined)
-    check(s).for.content([a.raw.payload()])
+    check(s).for.content([aRaw.payload()])
 
   it ".dest", ->
-    expectedContent = [a.raw.payload()]
+    expectedContent = [aRaw.payload()]
     s = a().source(src, srcOpts).dest(dst, dstOpts)()
     check(s).for.src(src, srcOpts)
     check(s).for.name(src)
@@ -51,11 +53,11 @@ describe 'API', ->
     cOpts = "string"
     dOpts = ->
     expectedContent = [
-      a.raw.payload(aOpts),
-      b.raw.payload(bOpts),
-      c.raw.payload(cOpts),
-      d.raw.payload(dOpts),
-      e.raw.payload(),
+      aRaw.payload(aOpts),
+      bRaw.payload(bOpts),
+      cRaw.payload(cOpts),
+      dRaw.payload(dOpts),
+      eRaw.payload(),
     ]
     dstThen =  dst + ".then"
     s = a(src, dstThen, aOpts)
@@ -63,7 +65,7 @@ describe 'API', ->
       .then(c(cOpts))
       .then(d(dOpts))
       .then(e())()
-    
+
     check(s).for.src(src, {})
     check(s).for.name(src)
     check(s).for.dst(dstThen, {})
@@ -73,9 +75,9 @@ describe 'API', ->
   it ".with", ->
     dstW = dst + ".with"
     expectedContent = [
-      a.raw.payload(),
+      aRaw.payload(),
       w.before.payload(),
-      b.raw.payload(),
+      bRaw.payload(),
       w.after.payload()
     ]
 
@@ -91,11 +93,11 @@ describe 'API', ->
     it "should work", ->
       dstW = dst + ".wrap"
       expectedContent = [
-        a.raw.payload(),
-        b.raw.payload(),
+        aRaw.payload(),
+        bRaw.payload(),
         w.before.payload(),
-        c.raw.payload(),
-        d.raw.payload(),
+        cRaw.payload(),
+        dRaw.payload(),
         w.after.payload()
       ]
       s = a(src, dstW)
@@ -125,11 +127,11 @@ describe 'API', ->
       dstW = dst + ".next.wrap"
       dstW_next = dst + ".next.wrap.1"
       expectedContent = [
-        a.raw.payload(),
-        b.raw.payload(),
+        aRaw.payload(),
+        bRaw.payload(),
         w.before.payload(),
-        c.raw.payload(),
-        d.raw.payload(),
+        cRaw.payload(),
+        dRaw.payload(),
         w.after.payload()
       ]
 
@@ -143,7 +145,7 @@ describe 'API', ->
 
       check(s).for.src(src, {})
       check(s).for.name(src)
-      check(s).for.dst(dstW, {})
+      check(s).for.dst(dstW_next)
       check(s).for.content(expectedContent)
       util.checkFile(src, dstW_next, expectedContent)
 
@@ -162,10 +164,10 @@ describe 'API', ->
       dstW = dst + ".wrapAll"
       expectedContent = [
         w.before.payload(),
-        a.raw.payload(),
-        b.raw.payload(),
-        c.raw.payload(),
-        d.raw.payload(),
+        aRaw.payload(),
+        bRaw.payload(),
+        cRaw.payload(),
+        dRaw.payload(),
         w.after.payload()
       ]
       s = a(src, dstW)
@@ -173,7 +175,6 @@ describe 'API', ->
         .then(c())
         .then(d())
         .wrapAll().with(w())()
-
 
       check(s).for.src(src, {})
       check(s).for.name(src)
@@ -185,11 +186,11 @@ describe 'API', ->
       dstW = dst + ".next.wrapAll"
       dstW_next = dst + ".next.wrapAll.1"
       expectedContent = [
-        a.raw.payload(),
-        b.raw.payload(),
+        aRaw.payload(),
+        bRaw.payload(),
         w.before.payload(),
-        c.raw.payload(),
-        d.raw.payload(),
+        cRaw.payload(),
+        dRaw.payload(),
         w.after.payload()
       ]
       s = a(src, dstW)
@@ -202,7 +203,7 @@ describe 'API', ->
 
       check(s).for.src(src, {})
       check(s).for.name(src)
-      check(s).for.dst(dstW, {})
+      check(s).for.dst(dstW_next)
       check(s).for.content(expectedContent)
       util.checkFile(src, dstW_next, expectedContent)
 
@@ -213,11 +214,11 @@ describe 'API', ->
       cOpts = "string"
       dOpts = ->
       expectedContent = [
-        a.raw.payload(aOpts),
-        b.raw.payload(bOpts),
-        # c.raw.payload(cOpts),
-        d.raw.payload(dOpts),
-        e.raw.payload(),
+        aRaw.payload(aOpts),
+        bRaw.payload(bOpts),
+        # cRaw.payload(cOpts),
+        dRaw.payload(dOpts),
+        eRaw.payload(),
       ]
       dstIf =  dst + ".if"
       s = a(src, dstIf, aOpts)
@@ -235,8 +236,8 @@ describe 'API', ->
     it "should work with wrapper", ->
       dstIf = dst + ".with.if"
       expectedContent = [
-        a.raw.payload(),
-        b.raw.payload(),
+        aRaw.payload(),
+        bRaw.payload(),
       ]
 
       s = a(src, dstIf).then(b()).with(w()).if(false)()
@@ -254,14 +255,14 @@ describe 'API', ->
       cOpts = "string"
       dOpts = ->
       expectedContent = [
-        a.raw.payload(aOpts),
-        b.raw.payload(bOpts),
-        # c.raw.payload(cOpts),
-        d.raw.payload(dOpts),
-        e.raw.payload(),
+        # aRaw.payload(aOpts),
+        bRaw.payload(bOpts),
+        # cRaw.payload(cOpts),
+        dRaw.payload(dOpts),
+        eRaw.payload(),
       ]
       dstIf =  dst + ".ifNot"
-      s = a(src, dstIf, aOpts)
+      s = a(src, dstIf, aOpts).ifNot(true)
         .then(b(bOpts)).ifNot(false)
         .then(c(cOpts)).ifNot(true)
         .then(d(dOpts))
@@ -276,8 +277,8 @@ describe 'API', ->
     it "should work with wrapper", ->
       dstIf = dst + ".with.ifNot"
       expectedContent = [
-        a.raw.payload(),
-        b.raw.payload(),
+        aRaw.payload(),
+        bRaw.payload(),
       ]
 
       s = a(src, dstIf).then(b()).with(w()).ifNot(true)()
@@ -291,26 +292,32 @@ describe 'API', ->
   it ".next", ->
     dst1 = dst + '.next.1'
     dst2 = dst + '.next.2'
-    expectedContent1 = [a.raw.payload()]
+    expectedContent1 = [aRaw.payload()]
 
     s = a(src, dst1)
       .next(b())()
     util.checkFile(src, dst1, expectedContent1, {})
+
   it ".write", ->
     dst1 = dst + '.write.1'
     dst2 = dst + '.write.2'
-    expectedContent1 = [a.raw.payload()]
-    expectedContent2 = [a.raw.payload(), b.raw.payload()]
+    expectedContent1 = [aRaw.payload()]
+    expectedContent2 = [aRaw.payload(), bRaw.payload()]
 
     s = a(src, dst1)
       .next(b()).write(dst2)()
+
+    check(s).for.src(src, {})
+    check(s).for.dst(dst2)
+    check(s).for.name(src);
+    check(s).for.content(expectedContent2);
     util.checkFile(src, dst1, expectedContent1, {})
     util.checkFile(src, dst2, expectedContent2, undefined)
 
   it ".rename", ->
     dstRename = dst + '.rename'
     newName = 'whatever'
-    expectedContent = [a.raw.payload()]
+    expectedContent = [aRaw.payload()]
 
     s = a(src, dstRename).rename(newName)()
 
