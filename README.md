@@ -1,5 +1,7 @@
 # gulp-heap
 
+[![Build Status](https://travis-ci.org/akfish/gulp-heap.svg?branch=master)](https://travis-ci.org/akfish/gulp-heap)
+
 Semantic gulp API.
 
 **Experimental and still under developing, not suitable for production use**

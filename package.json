@@ -1,10 +1,10 @@
 {
   "name": "gulp-heap",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Semantic gulp API (experimental and still under developing, not suitalbe for production use)",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "gulp test"
   },
   "author": "AKFish <akfish@gmail.com> (http://catx.me)",
   "license": "MIT",
