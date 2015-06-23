@@ -1,6 +1,6 @@
 expect = require('chai').expect
 
-util = require('./util')
+util = {check} = require('./util')
 core = require('../lib/core')
 
 {Stream, makeTask, FS} = require('./mock')
@@ -22,11 +22,10 @@ describe 'Task', ->
     src = 'src_path'
     dst = 'dst_path'
     s = task(src, dst, taskOpts)()
-    expect(s).to.be.an.instanceOf(Stream)
-    util.checkSrc(s, src, {})
-    util.checkDst(s, dst, {})
-    util.checkName(s, src)
-    util.checkContent(s, expectedContent)
+    check(s).for.src(src, {})
+    check(s).for.dst(dst, {})
+    check(s).for.name(src)
+    check(s).for.content(expectedContent)
 
     util.checkFile(src, dst, expectedContent, {})
 
@@ -35,8 +34,7 @@ describe 'Task', ->
     upstreamOpts = foo: 'upstream'
     upstream = new Stream(src, upstreamOpts)
     s = task(taskOpts)(null, upstream)
-    expect(s).to.be.an.instanceOf(Stream)
-    util.checkSrc(s, src, upstreamOpts)
-    util.checkDst(s)
-    util.checkName(s, src)
-    util.checkContent(s, expectedContent)
+    check(s).for.src(src, upstreamOpts)
+    check(s).for.dst()
+    check(s).for.name(src)
+    check(s).for.content(expectedContent)

@@ -1,6 +1,6 @@
 expect = require('chai').expect
 
-util = require('./util')
+util = {check} = require('./util')
 core = require('../lib/core')
 
 {Stream, makeTask, FS} = require('./mock')
@@ -31,20 +31,18 @@ describe 'API', ->
 
   it ".source", ->
     s = a().source(src, srcOpts)()
-    expect(s).to.be.an.instanceOf(Stream)
-    util.checkSrc(s, src, srcOpts)
-    util.checkName(s, src)
-    util.checkDst(s, undefined, undefined)
-    util.checkContent(s, [a.raw.payload()])
+    check(s).for.src(src, srcOpts)
+    check(s).for.name(src)
+    check(s).for.dst(undefined, undefined)
+    check(s).for.content([a.raw.payload()])
 
   it ".dest", ->
     expectedContent = [a.raw.payload()]
     s = a().source(src, srcOpts).dest(dst, dstOpts)()
-    expect(s).to.be.an.instanceOf(Stream)
-    util.checkSrc(s, src, srcOpts)
-    util.checkName(s, src)
-    util.checkDst(s, dst, dstOpts)
-    util.checkContent(s, expectedContent)
+    check(s).for.src(src, srcOpts)
+    check(s).for.name(src)
+    check(s).for.dst(dst, dstOpts)
+    check(s).for.content(expectedContent)
     util.checkFile(src, dst, expectedContent, dstOpts)
 
   it ".then", ->
@@ -65,11 +63,11 @@ describe 'API', ->
       .then(c(cOpts))
       .then(d(dOpts))
       .then(e())()
-    expect(s).to.be.an.instanceOf(Stream)
-    util.checkSrc(s, src, {})
-    util.checkName(s, src)
-    util.checkDst(s, dstThen, {})
-    util.checkContent(s, expectedContent)
+    
+    check(s).for.src(src, {})
+    check(s).for.name(src)
+    check(s).for.dst(dstThen, {})
+    check(s).for.content(expectedContent)
     util.checkFile(src, dstThen, expectedContent, {})
 
   it ".with", ->
@@ -82,11 +80,11 @@ describe 'API', ->
     ]
 
     s = a(src, dstW).then(b()).with(w())()
-    expect(s).to.be.an.instanceOf(Stream)
-    util.checkSrc(s, src, {})
-    util.checkName(s, src)
-    util.checkDst(s, dstW, {})
-    util.checkContent(s, expectedContent)
+
+    check(s).for.src(src, {})
+    check(s).for.name(src)
+    check(s).for.dst(dstW, {})
+    check(s).for.content(expectedContent)
     util.checkFile(src, dstW, expectedContent, {})
 
   describe ".wrap", ->
@@ -106,11 +104,11 @@ describe 'API', ->
         .then(d())
         .wrap(2).with(w())()
 
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstW, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstW, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstW, expectedContent, {})
 
     it "should not allow out of range value", ->
@@ -142,11 +140,11 @@ describe 'API', ->
         .wrap(2).with(w())
         .write(dstW_next)()
 
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstW, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstW, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstW_next, expectedContent)
 
       tryPenetrateNext = ->
@@ -176,11 +174,11 @@ describe 'API', ->
         .then(d())
         .wrapAll().with(w())()
 
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstW, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstW, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstW, expectedContent, {})
 
     it "should not penetrate .next() call", ->
@@ -201,11 +199,11 @@ describe 'API', ->
         .wrapAll().with(w())
         .write(dstW_next)()
 
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstW, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstW, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstW_next, expectedContent)
 
   describe ".if", ->
@@ -227,11 +225,11 @@ describe 'API', ->
         .then(c(cOpts)).if(false)
         .then(d(dOpts))
         .then(e())()
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstIf, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstIf, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstIf, expectedContent, {})
 
     it "should work with wrapper", ->
@@ -242,11 +240,11 @@ describe 'API', ->
       ]
 
       s = a(src, dstIf).then(b()).with(w()).if(false)()
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstIf, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstIf, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstIf, expectedContent, {})
 
   describe ".ifNot", ->
@@ -268,11 +266,11 @@ describe 'API', ->
         .then(c(cOpts)).ifNot(true)
         .then(d(dOpts))
         .then(e())()
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstIf, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstIf, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstIf, expectedContent, {})
 
     it "should work with wrapper", ->
@@ -283,11 +281,11 @@ describe 'API', ->
       ]
 
       s = a(src, dstIf).then(b()).with(w()).ifNot(true)()
-      expect(s).to.be.an.instanceOf(Stream)
-      util.checkSrc(s, src, {})
-      util.checkName(s, src)
-      util.checkDst(s, dstIf, {})
-      util.checkContent(s, expectedContent)
+
+      check(s).for.src(src, {})
+      check(s).for.name(src)
+      check(s).for.dst(dstIf, {})
+      check(s).for.content(expectedContent)
       util.checkFile(src, dstIf, expectedContent, {})
 
   it ".next", ->

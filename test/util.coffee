@@ -1,5 +1,6 @@
 expect = require('chai').expect
-{FS} = require('./mock')
+{Stream, FS} = require('./mock')
+
 
 module.exports = utils =
   checkSrc: (s, src, opts) ->
@@ -29,3 +30,23 @@ module.exports = utils =
     expect(file.name).to.deep.equals(name)
     expect(file.content).to.deep.equals(content)
     expect(file.opts).to.deep.equals(opts)
+
+CHECKER_CACHE = {}
+
+module.exports.check = (stream) ->
+  expect(stream).to.be.an.instanceOf(Stream)
+
+  if stream.id of CHECKER_CACHE
+    return CHECKER_CACHE[stream.id]
+
+  checker = {}
+
+  checker.for =
+    src: utils.checkSrc.bind(undefined, stream)
+    dst: utils.checkDst.bind(undefined, stream)
+    name: utils.checkName.bind(undefined, stream)
+    content: utils.checkContent.bind(undefined, stream)
+
+  CHECKER_CACHE[stream.id] = checker
+
+  return checker
