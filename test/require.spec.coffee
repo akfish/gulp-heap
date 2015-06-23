@@ -1,24 +1,25 @@
 expect = require('chai').expect
 
+_require = require('../lib/require')
+
 util = {check} = require('./util')
-convert = require('../lib/convert')
+path = require('path')
 
 {Stream, makeTask, FS} = require('./mock')
 
-FS.open('converter')
+FS.open('require')
 
-describe "Converter", ->
+describe "Require", ->
   rawTask = require('./raw-task')
   rawWrapper = require('./raw-wrapper')
-
   taskMaker = null
-  it "should convert function to task", ->
+  it "should require module as task", ->
     src = 'src_path'
     dst = 'dst_path'
 
     expectedContent = [rawTask.payload()]
 
-    taskMaker = convert(rawTask).toTask()
+    taskMaker = _require(path.resolve(__dirname, './raw-task'))
     expect(taskMaker).to.be.a('function')
     task = taskMaker(src, dst)
     expect(task).to.be.a('function')
@@ -34,9 +35,8 @@ describe "Converter", ->
 
     util.checkFile(src, dst, expectedContent, {})
 
-  it "should convert function to wrapper", ->
-
-    wrapperMaker = convert(rawWrapper).toWrapper('before', 'after')
+  it "should require module as wrapper", ->
+    wrapperMaker = _require(path.resolve(__dirname, './raw-wrapper')).asWrapper('before', 'after')
     expect(wrapperMaker).to.be.a('function')
 
     wrapper = wrapperMaker()
