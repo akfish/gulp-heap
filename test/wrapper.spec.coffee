@@ -1,6 +1,7 @@
 expect = require('chai').expect
 
 core = require('../lib/core')
+Wrapper = require('../lib/wrapper')
 
 {Stream, makeTask, FS} = require('./mock')
 
@@ -13,6 +14,7 @@ describe "Wrapper", ->
     wrapper = core.wrapper before, after
     expect(wrapper).to.be.a('function')
     made = wrapper()
+    expect(made).to.be.instanceOf(Wrapper)
     expect(made).to.deep.equals({
       isWrapper: true,
       toggled: true,
