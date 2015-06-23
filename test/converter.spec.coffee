@@ -9,8 +9,8 @@ Task = require('../lib/task')
 FS.open('converter')
 
 describe "Converter", ->
-  rawTask = require('./raw-task')
-  rawWrapper = require('./raw-wrapper')
+  rawTask = require('./mock-task')
+  rawWrapper = require('./mock-wrapper')
 
   taskMaker = null
   it "should convert function to task", ->

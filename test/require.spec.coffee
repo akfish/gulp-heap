@@ -12,8 +12,8 @@ path = require('path')
 FS.open('require')
 
 describe "Require", ->
-  rawTask = require('./raw-task')
-  rawWrapper = require('./raw-wrapper')
+  rawTask = require('./mock-task')
+  rawWrapper = require('./mock-wrapper')
   taskMaker = null
   it "should require module as task", ->
     src = 'src_path'
@@ -21,7 +21,7 @@ describe "Require", ->
 
     expectedContent = [rawTask.payload()]
 
-    taskMaker = _require(path.resolve(__dirname, './raw-task'))
+    taskMaker = _require(path.resolve(__dirname, './mock-task'))
     expect(taskMaker).to.be.a('function')
     task = taskMaker(src, dst)
     expect(task).to.be.a('function')
@@ -38,7 +38,7 @@ describe "Require", ->
     util.checkFile(src, dst, expectedContent, {})
 
   it "should require module as wrapper", ->
-    wrapperMaker = _require(path.resolve(__dirname, './raw-wrapper')).asWrapper('before', 'after')
+    wrapperMaker = _require(path.resolve(__dirname, './mock-wrapper')).asWrapper('before', 'after')
     expect(wrapperMaker).to.be.a('function')
 
     wrapper = wrapperMaker()
