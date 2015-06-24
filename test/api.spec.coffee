@@ -322,3 +322,41 @@ describe 'API', ->
     s = a(src, dstRename).rename(newName)()
 
     util.checkFile(newName, dstRename, expectedContent, {})
+
+  describe ".fork", ->
+    multiple = core.task (stream, opts) ->
+      # Note: sub-streams are created by their parent
+      stream.A = new Stream(stream.src, stream.srcOpts)
+      stream.B = new Stream(stream.src, stream.srcOpts)
+
+      stream.A.write('>A')
+      stream.B.write('>B')
+
+      stream
+
+    aContent = ['>A']
+    bContent = ['>B']
+
+    fullContent = bContent.concat(aContent)
+
+    it "should work", ->
+      src = "fork_src"
+      dst = "frok_dst"
+      dstA = "frok_dst_a"
+      dstB = "frok_dst_b"
+      s = multiple(src, dst)
+        .fork("A").write(dstA).merge()
+        .fork("B").write(dstB).merge()()
+
+      check(s).for.src(src, {})
+      check(s).for.dst(dst, {})
+      check(s).for.name(src)
+      check(s).for.content(fullContent)
+
+      util.checkFile(src, dst, fullContent, {})
+      util.checkFile(src, dstA, aContent)
+      util.checkFile(src, dstB, bContent)
+
+    it "should work with wrapper"
+    it "should work with .wrap()"
+    it "should work with .wrapAll()"

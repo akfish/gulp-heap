@@ -49,11 +49,11 @@ class MockStream
     @constructor.FS.write(@dst, @name, @content.map((item) -> _.clone(item)), @dstOpts)
 
   takeOver: (prevStream) ->
-    @src = prevStream.src
-    @srcOpts = prevStream.srcOpts
-    @dst = prevStream.dst
-    @dstOpts = prevStream.dstOpts
-    @name = prevStream.name
+    @src ?= prevStream.src
+    @srcOpts ?= prevStream.srcOpts
+    @dst ?= prevStream.dst
+    @dstOpts ?= prevStream.dstOpts
+    @name ?= prevStream.name
 
     @content = prevStream.content.concat(@content)
 
@@ -85,6 +85,13 @@ mockProxy =
 
   writeStream: (dst, opts) ->
     return openWriteStream(dst, opts)
+
+  mergeStreams: (streams) ->
+    merged = new MockStream();
+
+    streams.forEach((s) -> s.pipe(merged))
+
+    return merged
 
 require('../lib/proxy').init(mockProxy)
 
