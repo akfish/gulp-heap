@@ -3,10 +3,31 @@ expect = require('chai').expect
 util = {check} = require('./util')
 core = require('../lib/core')
 
-{Stream, makeTask, FS} = require('./mock')
-
+# {Stream, makeTask, FS} = require('./mock')
+FS = require('./mock/fs')
+{Writer} = require('./mock/stream')
 FS.open('api')
 
+makeTask = (name) ->
+  raw = (stream, opts) ->
+    sw = new Writer()
+    payload =
+      source: name
+      opts: opts
+
+    sw.enqueue(payload)
+
+    sw
+
+  raw.payload = (opts = {}) ->
+    payload =
+      source: name
+      opts: opts
+    payload
+
+  raw.taskName = name
+
+  raw
 aRaw = makeTask('a')
 bRaw = makeTask('b')
 cRaw = makeTask('c')
@@ -33,19 +54,22 @@ describe 'API', ->
 
   it ".source", ->
     s = a().source(src, srcOpts)()
-    check(s).for.src(src, srcOpts)
-    check(s).for.name(src)
-    check(s).for.dst(undefined, undefined)
-    check(s).for.content([aRaw.payload()])
+      .promise()
+      .tap (s) ->
+        check(s).for.src(src, srcOpts)
+          .and.name(src)
+          .and.content([aRaw.payload()])
 
   it ".dest", ->
     expectedContent = [aRaw.payload()]
     s = a().source(src, srcOpts).dest(dst, dstOpts)()
-    check(s).for.src(src, srcOpts)
-    check(s).for.name(src)
-    check(s).for.dst(dst, dstOpts)
-    check(s).for.content(expectedContent)
-    util.checkFile(src, dst, expectedContent, dstOpts)
+      .promise()
+      .tap (s) ->
+        check(s).for.src(src, srcOpts)
+          .and.name(src)
+          .and.dst(dst, dstOpts)
+          .and.content(expectedContent)
+        util.checkFile(src, dst, expectedContent, dstOpts)
 
   it ".then", ->
     aOpts = { foo: 'a' }
@@ -65,12 +89,14 @@ describe 'API', ->
       .then(c(cOpts))
       .then(d(dOpts))
       .then(e())()
+      .promise()
+      .tap (s) ->
+        check(s).for.src(src, {})
+          .and.name(src)
+          .and.dst(dstThen, {})
+          .and.content(expectedContent)
+        util.checkFile(src, dstThen, expectedContent, {})
 
-    check(s).for.src(src, {})
-    check(s).for.name(src)
-    check(s).for.dst(dstThen, {})
-    check(s).for.content(expectedContent)
-    util.checkFile(src, dstThen, expectedContent, {})
 
   it ".with", ->
     dstW = dst + ".with"
@@ -82,12 +108,13 @@ describe 'API', ->
     ]
 
     s = a(src, dstW).then(b()).with(w())()
-
-    check(s).for.src(src, {})
-    check(s).for.name(src)
-    check(s).for.dst(dstW, {})
-    check(s).for.content(expectedContent)
-    util.checkFile(src, dstW, expectedContent, {})
+      .promise()
+      .tap (s) ->
+        check(s).for.src(src, {})
+          .and.name(src)
+          .and.dst(dstW, {})
+          .and.content(expectedContent)
+        util.checkFile(src, dstW, expectedContent, {})
 
   describe ".wrap", ->
     it "should work", ->
@@ -105,13 +132,13 @@ describe 'API', ->
         .then(c())
         .then(d())
         .wrap(2).with(w())()
-
-
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstW, {})
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstW, expectedContent, {})
+        .promise()
+        .tap (s) ->
+          check(s).for.src(src, {})
+          check(s).for.name(src)
+          check(s).for.dst(dstW, {})
+          check(s).for.content(expectedContent)
+          util.checkFile(src, dstW, expectedContent, {})
 
     it "should not allow out of range value", ->
       makeWrongWrapping = ->
@@ -141,13 +168,13 @@ describe 'API', ->
         .then(d())
         .wrap(2).with(w())
         .write(dstW_next)()
-
-
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstW_next)
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstW_next, expectedContent)
+        .promise()
+        .tap (s) ->
+          check(s).for.src(src, {})
+          check(s).for.name(src)
+          check(s).for.dst(dstW_next)
+          check(s).for.content(expectedContent)
+          util.checkFile(src, dstW_next, expectedContent)
 
       tryPenetrateNext = ->
         a(src, dst)
@@ -175,12 +202,13 @@ describe 'API', ->
         .then(c())
         .then(d())
         .wrapAll().with(w())()
-
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstW, {})
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstW, expectedContent, {})
+        .promise()
+        .tap (s) ->
+          check(s).for.src(src, {})
+            .and.name(src)
+            .and.dst(dstW, {})
+            .and.content(expectedContent)
+          util.checkFile(src, dstW, expectedContent, {})
 
     it "should not penetrate .next() call", ->
       dstW = dst + ".next.wrapAll"
@@ -199,13 +227,13 @@ describe 'API', ->
         .then(d())
         .wrapAll().with(w())
         .write(dstW_next)()
-
-
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstW_next)
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstW_next, expectedContent)
+        .promise()
+        .tap (s) ->
+          check(s).for.src(src, {})
+          check(s).for.name(src)
+          check(s).for.dst(dstW_next)
+          check(s).for.content(expectedContent)
+          util.checkFile(src, dstW_next, expectedContent)
 
   describe ".if", ->
     it "should work with task", ->
@@ -226,12 +254,13 @@ describe 'API', ->
         .then(c(cOpts)).if(false)
         .then(d(dOpts))
         .then(e())()
+        .promise().tap (s) ->
 
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstIf, {})
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstIf, expectedContent, {})
+          check(s).for.src(src, {})
+          check(s).for.name(src)
+          check(s).for.dst(dstIf, {})
+          check(s).for.content(expectedContent)
+          util.checkFile(src, dstIf, expectedContent, {})
 
     it "should work with wrapper", ->
       dstIf = dst + ".with.if"
@@ -241,12 +270,13 @@ describe 'API', ->
       ]
 
       s = a(src, dstIf).then(b()).with(w()).if(false)()
+        .promise().tap (s) ->
 
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstIf, {})
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstIf, expectedContent, {})
+          check(s).for.src(src, {})
+          check(s).for.name(src)
+          check(s).for.dst(dstIf, {})
+          check(s).for.content(expectedContent)
+          util.checkFile(src, dstIf, expectedContent, {})
 
   describe ".ifNot", ->
     it "should work with task", ->
@@ -267,12 +297,13 @@ describe 'API', ->
         .then(c(cOpts)).ifNot(true)
         .then(d(dOpts))
         .then(e())()
+        .promise().tap (s) ->
 
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstIf, {})
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstIf, expectedContent, {})
+          check(s).for.src(src, {})
+          check(s).for.name(src)
+          check(s).for.dst(dstIf, {})
+          check(s).for.content(expectedContent)
+          util.checkFile(src, dstIf, expectedContent, {})
 
     it "should work with wrapper", ->
       dstIf = dst + ".with.ifNot"
@@ -282,12 +313,13 @@ describe 'API', ->
       ]
 
       s = a(src, dstIf).then(b()).with(w()).ifNot(true)()
+        .promise().tap (s) ->
 
-      check(s).for.src(src, {})
-      check(s).for.name(src)
-      check(s).for.dst(dstIf, {})
-      check(s).for.content(expectedContent)
-      util.checkFile(src, dstIf, expectedContent, {})
+          check(s).for.src(src, {})
+          check(s).for.name(src)
+          check(s).for.dst(dstIf, {})
+          check(s).for.content(expectedContent)
+          util.checkFile(src, dstIf, expectedContent, {})
 
   it ".next", ->
     dst1 = dst + '.next.1'
@@ -296,7 +328,10 @@ describe 'API', ->
 
     s = a(src, dst1)
       .next(b())()
-    util.checkFile(src, dst1, expectedContent1, {})
+      .promise()
+      .tap (s) ->
+        util.checkFile(src, dst1, expectedContent1, {})
+
 
   it ".write", ->
     dst1 = dst + '.write.1'
@@ -306,13 +341,13 @@ describe 'API', ->
 
     s = a(src, dst1)
       .next(b()).write(dst2)()
-
-    check(s).for.src(src, {})
-    check(s).for.dst(dst2)
-    check(s).for.name(src);
-    check(s).for.content(expectedContent2);
-    util.checkFile(src, dst1, expectedContent1, {})
-    util.checkFile(src, dst2, expectedContent2, undefined)
+      .promise().tap (s) ->
+        check(s).for.src(src, {})
+        check(s).for.dst(dst2)
+        check(s).for.name(src);
+        check(s).for.content(expectedContent2);
+        util.checkFile(src, dst1, expectedContent1, {})
+        util.checkFile(src, dst2, expectedContent2, undefined)
 
   it ".rename", ->
     dstRename = dst + '.rename'
@@ -320,43 +355,83 @@ describe 'API', ->
     expectedContent = [aRaw.payload()]
 
     s = a(src, dstRename).rename(newName)()
-
-    util.checkFile(newName, dstRename, expectedContent, {})
+      .promise().tap (s) ->
+        util.checkFile(newName, dstRename, expectedContent, {})
 
   describe ".fork", ->
-    multiple = core.task (stream, opts) ->
-      # Note: sub-streams are created by their parent
-      stream.A = new Stream(stream.src, stream.srcOpts)
-      stream.B = new Stream(stream.src, stream.srcOpts)
+    multipleRaw = (stream, opts) ->
+      sw = new Writer()
+      payload =
+        source: "main"
+        opts: opts
 
-      stream.A.write('>A')
-      stream.B.write('>B')
+      sw.enqueue(payload)
 
-      stream
+      Object.defineProperty stream, 'A',
+        get: ->
+          console.log "Getting .A"
+          sa = new Writer()
+          pa =
+            source: "A"
 
-    aContent = ['>A']
-    bContent = ['>B']
+          sa.enqueue(pa)
 
-    fullContent = bContent.concat(aContent)
+          sw.pipe(sa)
+
+      Object.defineProperty stream, 'B',
+        get: ->
+          console.log "Getting .B"
+          sb = new Writer()
+          pb =
+            source: "B"
+
+          sb.enqueue(pb)
+
+          sw.pipe(sb)
+
+      sw
+
+    multipleRaw.taskName = "multiple"
+
+    multiple = core.task multipleRaw
+
+    mainContent = [source: 'main']
+
+    aContent = mainContent.concat([source: 'A'])
+    bContent = mainContent.concat([source: 'B'])
+
+    fullContent = mainContent.concat(aContent).concat(bContent)
 
     it "should work", ->
       src = "fork_src"
-      dst = "frok_dst"
-      dstA = "frok_dst_a"
-      dstB = "frok_dst_b"
+      dst = "fork_dst"
+      dstA = "fork_dst_a"
+      dstB = "fork_dst_b"
       s = multiple(src, dst)
         .fork("A").write(dstA).merge()
         .fork("B").write(dstB).merge()()
 
-      check(s).for.src(src, {})
-      check(s).for.dst(dst, {})
-      check(s).for.name(src)
-      check(s).for.content(fullContent)
+      s.promise().tap (s) ->
+        check(s).for.src(src, {})
+        check(s).for.dst(dst, {})
+        check(s).for.name(src)
+        check(s).for.content(fullContent)
 
-      util.checkFile(src, dst, fullContent, {})
-      util.checkFile(src, dstA, aContent)
-      util.checkFile(src, dstB, bContent)
+        util.checkFile(src, dst, fullContent, {})
+        util.checkFile(src, dstA, aContent)
+        util.checkFile(src, dstB, bContent)
 
-    it "should work with wrapper"
+    it "should work with wrapper"#, ->
+      # src = "fork_src"
+      # dst = "fork_dst_with"
+      # dstA = "fork_dst_with_a"
+      # dstB = "fork_dst_with_b"
+      #
+      # s = a(src, dst)
+      #   .then(b())
+      #   .then(multiple())
+      #   .fork("A").write(dstA).merge()
+
+
     it "should work with .wrap()"
     it "should work with .wrapAll()"
