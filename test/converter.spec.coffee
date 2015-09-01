@@ -4,13 +4,13 @@ util = {check} = require('./util')
 convert = require('../lib/convert')
 Task = require('../lib/task')
 
-{Stream, makeTask, FS} = require('./mock')
+FS = require('./mock/fs')
 
 FS.open('converter')
 
 describe "Converter", ->
-  rawTask = require('./mock-task')
-  rawWrapper = require('./mock-wrapper')
+  rawTask = require('./mock/task')
+  rawWrapper = require('./mock/wrapper')
 
   taskMaker = null
   it "should convert function to task", ->
@@ -28,12 +28,13 @@ describe "Converter", ->
 
     s = task()
 
-    check(s).for.src(src, {})
-    check(s).for.dst(dst, {})
-    check(s).for.name(src)
-    check(s).for.content(expectedContent)
+    s.promise().tap (s) ->
+      check(s).for.src(src, {})
+      check(s).for.dst(dst, {})
+      check(s).for.name(src)
+      check(s).for.content(expectedContent)
 
-    util.checkFile(src, dst, expectedContent, {})
+      util.checkFile(src, dst, expectedContent, {})
 
   it "should convert function to wrapper", ->
 
@@ -56,9 +57,10 @@ describe "Converter", ->
 
     s = taskMaker(src, dst).with(wrapper)()
 
-    check(s).for.src(src, {})
-    check(s).for.dst(dst, {})
-    check(s).for.name(src)
-    check(s).for.content(expectedContent)
+    s.promise().tap (s) ->
+      check(s).for.src(src, {})
+      check(s).for.dst(dst, {})
+      check(s).for.name(src)
+      check(s).for.content(expectedContent)
 
-    util.checkFile(src, dst, expectedContent, {})
+      util.checkFile(src, dst, expectedContent, {})

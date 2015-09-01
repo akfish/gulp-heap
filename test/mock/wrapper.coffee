@@ -1,4 +1,4 @@
-{Stream, makeTask} = require('./mock')
+{Writer} = require('./stream')
 
 payload = (name, opts = {}) ->
   p =
@@ -7,8 +7,8 @@ payload = (name, opts = {}) ->
   p
 
 mockRun = (name, opts) ->
-  s = new Stream()
-  s.write(payload(name, opts))
+  s = new Writer()
+  s.enqueue(payload(name, opts))
   s
 
 

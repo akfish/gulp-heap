@@ -1,4 +1,4 @@
-{Stream, makeTask} = require('./mock')
+{Writer} = require('./stream')
 
 name = 'foo'
 
@@ -9,8 +9,8 @@ payload = (opts = {}) ->
   p
 
 module.exports = (opts) ->
-  s = new Stream()
-  s.write(payload(opts))
+  s = new Writer()
+  s.enqueue(payload(opts))
   s
 
 module.exports.payload = payload
