@@ -3,8 +3,9 @@ expect = require('chai').expect
 core = require('../lib/core')
 Wrapper = require('../lib/wrapper')
 
-{Stream, makeTask, FS} = require('./mock')
+makeTask = require('./mock/task')
 
+FS = require('./mock/fs')
 FS.open('wrapper')
 
 describe "Wrapper", ->
