@@ -1,16 +1,21 @@
 {Writer} = require('./stream')
+module.exports = (name) ->
+  raw = (stream, opts) ->
+    sw = new Writer()
+    payload =
+      source: name
+      opts: opts
 
-name = 'foo'
+    sw.enqueue(payload)
 
-payload = (opts = {}) ->
-  p =
-    source: name
-    opts: opts
-  p
+    sw
 
-module.exports = (opts) ->
-  s = new Writer()
-  s.enqueue(payload(opts))
-  s
+  raw.payload = (opts = {}) ->
+    payload =
+      source: name
+      opts: opts
+    payload
 
-module.exports.payload = payload
+  raw.taskName = name
+
+  raw

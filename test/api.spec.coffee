@@ -8,26 +8,27 @@ FS = require('./mock/fs')
 {Writer} = require('./mock/stream')
 FS.open('api')
 
-makeTask = (name) ->
-  raw = (stream, opts) ->
-    sw = new Writer()
-    payload =
-      source: name
-      opts: opts
-
-    sw.enqueue(payload)
-
-    sw
-
-  raw.payload = (opts = {}) ->
-    payload =
-      source: name
-      opts: opts
-    payload
-
-  raw.taskName = name
-
-  raw
+makeTask = require('./mock/task')
+# makeTask = (name) ->
+#   raw = (stream, opts) ->
+#     sw = new Writer()
+#     payload =
+#       source: name
+#       opts: opts
+#
+#     sw.enqueue(payload)
+#
+#     sw
+#
+#   raw.payload = (opts = {}) ->
+#     payload =
+#       source: name
+#       opts: opts
+#     payload
+#
+#   raw.taskName = name
+#
+#   raw
 aRaw = makeTask('a')
 bRaw = makeTask('b')
 cRaw = makeTask('c')

@@ -10,8 +10,8 @@ FS = require('./mock/fs')
 FS.open('require')
 
 describe "Require", ->
-  rawTask = require('./mock/task')
-  rawWrapper = require('./mock/wrapper')
+  rawTask = require('./mock/through-plugin')
+  rawWrapper = require('./mock/wrapper-plugin')
   taskMaker = null
   it "should require module as task", ->
     src = 'src_path'
@@ -19,7 +19,7 @@ describe "Require", ->
 
     expectedContent = [rawTask.payload()]
 
-    taskMaker = heap_require(path.resolve(__dirname, './mock/task'))
+    taskMaker = heap_require(path.resolve(__dirname, './mock/through-plugin'))
     expect(taskMaker).to.be.a('function')
     task = taskMaker(src, dst)
     expect(task).to.be.a('function')
@@ -37,7 +37,7 @@ describe "Require", ->
       util.checkFile(src, dst, expectedContent, {})
 
   it "should require module as wrapper", ->
-    wrapperMaker = heap_require(path.resolve(__dirname, './mock/wrapper')).asWrapper('before', 'after')
+    wrapperMaker = heap_require(path.resolve(__dirname, './mock/wrapper-plugin')).asWrapper('before', 'after')
     expect(wrapperMaker).to.be.a('function')
 
     wrapper = wrapperMaker()
