@@ -63,7 +63,7 @@ class WriterStream extends Through
 
   _through: (cb) ->
     @file.content = @file.content.concat @queue
-    console.log "Writes #{@file.content}"
+    # console.log "Writes #{@file.content}"
     cb null, @file
 
 module.exports.Rename =
@@ -87,17 +87,17 @@ class MergeStream extends Stream.Readable
 
   _read: ->
 
-    console.log "Merging"
+    # console.log "Merging"
     that = this
     Promise.reduce(@streams.map((s) ->
-      if not s.promise?
-        console.log s instanceof DestStream
-        console.log s.constructor
-        console.log s
+      # if not s.promise?
+        # console.log s instanceof DestStream
+        # console.log s.constructor
+        # console.log s
       s.promise()), ((content, s) ->
         return content.concat s.file.content), [])
       .then((content) ->
-        console.log(content)
+        # console.log(content)
 
         that.file.content = content
         that.push that.file

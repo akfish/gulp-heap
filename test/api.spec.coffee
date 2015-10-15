@@ -359,7 +359,7 @@ describe 'API', ->
       .promise().tap (s) ->
         util.checkFile(newName, dstRename, expectedContent, {})
 
-  describe ".fork", ->
+  describe.skip ".fork", ->
     multipleRaw = (stream, opts) ->
       sw = new Writer()
       payload =

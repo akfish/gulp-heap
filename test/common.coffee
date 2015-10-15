@@ -8,11 +8,11 @@ require('./mock')
 
 chai.use require('./mock/helper')
 
-old_log = console.log.bind(console)
-
-console.log = ->
-  trace = new Error().stack.split("\n")[2]
-
-  if trace.indexOf('node_modules') < 0
-    old_log trace
-  old_log.apply console, arguments
+# old_log = console.log.bind(console)
+#
+# console.log = ->
+#   trace = new Error().stack.split("\n")[2]
+#
+#   if trace.indexOf('node_modules') < 0
+#     old_log trace
+#   old_log.apply console, arguments
